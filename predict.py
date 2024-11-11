@@ -12,13 +12,28 @@ from ultralytics import YOLO
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
-if __name__ == "__main__":
 
-    model_path = '/workspace/youjiachen/workspace/ultralytics/layout_yolo11x/yolo11x_dataelem_layout_epoch500_imgsz1280_bs24/weights/best.pt'
-    data_base_dir = Path('/workspace/datasets/layout/dataelem_layout/yolo_format_merge_all')
-    save_dir = Path(model_path).parent.parent / 'predictions_yolo11x'
+def parse_args():
+    parser = argparse.ArgumentParser(description='YOLO prediction with command line interface')
+    parser.add_argument('--model-path', type=str, required=True, help='Path to the YOLO model weights')
+    parser.add_argument('--data-dir', type=Path, required=True, help='Base directory containing the dataset')
+    parser.add_argument(
+        '--save-dir', type=Path, help='Directory to save predictions (default: model_path/../predictions_yolo11x)'
+    )
+    parser.add_argument('--batch-size', type=int, default=24, help='Batch size for prediction (default: 24)')
+    parser.add_argument('--device', type=str, default='0', help='Device to run prediction on (default: 0)')
+    parser.add_argument('--conf', type=float, default=0.4, help='Confidence threshold (default: 0.4)')
+    parser.add_argument('--max-det', type=int, default=1000, help='Maximum number of detections (default: 1000)')
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    args = parse_args()
+
+    model_path = args.model_path
+    data_base_dir = args.data_dir
+    save_dir = args.save_dir or Path(model_path).parent.parent / 'predictions_yolo11x'
     save_dir.mkdir(parents=True, exist_ok=True)
-    batch_size = 24
 
     model = YOLO(model_path)
     val_txt = data_base_dir / 'val.txt'
@@ -27,10 +42,16 @@ if __name__ == "__main__":
         img_paths = [line.strip() for line in f.readlines()]
 
     dataset = [str(data_base_dir / img_path) for img_path in img_paths]
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+    dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False)
 
     for batch in tqdm(dataloader):
-        results = model.predict(source=batch, save=False, conf=0.3, device='0')
+        results = model.predict(
+            source=batch,
+            save=True,
+            device=args.device,
+            max_det=args.max_det,
+            conf=args.conf,
+        )
         for result in results:
             img_stem = Path(result.path).stem
             boxes = result.boxes.xyxy

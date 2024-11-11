@@ -64,6 +64,4 @@ if __name__ == "__main__":
         patience=args.patience,
         project=args.project,
         name=name,
-        # cache=True,
-        # scale=2.0
     )
