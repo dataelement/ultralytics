@@ -1,9 +1,10 @@
 #!/bin/bash
 
 # 设置基础路径
-MODEL_PATH=/workspace/youjiachen/workspace/ultralytics/table_cell_det_yolo11x/yolo11x_table_cell_det_epoch500_imgsz1280_bs8/weights/best.pt
-DATA_DIR=/workspace/datasets/table_rec/table_cell_det_yolo_format
-SAVE_DIR="/workspace/youjiachen/workspace/ultralytics/table_cell_det_yolo11x/yolo11x_table_cell_det_epoch500_imgsz1280_bs8/predict"
+MODEL_PATH=/workspace/models/hantian/yolo-doclaynet/yolov10b-doclaynet.onnx
+# DATA_DIR=/workspace/datasets/table_rec/table_cell_det_yolo_format
+DATA_DIR=/workspace/datasets/layout/DocLayout-YOLO/layout_data/doclaynet/
+SAVE_DIR=workspace/predict/doclaynet_onnx_yolov10b
 
 DEVICE="0"
 
@@ -11,6 +12,7 @@ DEVICE="0"
 BATCH_SIZE=24
 CONF=0.4
 MAX_DET=1000
+IMGSZ=1024
 
 # 运行预测
 python predict.py \
@@ -20,4 +22,5 @@ python predict.py \
     --batch-size ${BATCH_SIZE} \
     --device ${DEVICE} \
     --conf ${CONF} \
-    --max-det ${MAX_DET}
+    --max-det ${MAX_DET} \
+    --imgsz ${IMGSZ}

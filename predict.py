@@ -24,6 +24,8 @@ def parse_args():
     parser.add_argument('--device', type=str, default='0', help='Device to run prediction on (default: 0)')
     parser.add_argument('--conf', type=float, default=0.4, help='Confidence threshold (default: 0.4)')
     parser.add_argument('--max-det', type=int, default=1000, help='Maximum number of detections (default: 1000)')
+    parser.add_argument('--task', type=str, default='detect', help='Task to run (default: detect)')
+    parser.add_argument('--imgsz', type=int, default=1280, help='Image size (default: 1280)')
     return parser.parse_args()
 
 
@@ -51,6 +53,8 @@ if __name__ == "__main__":
             device=args.device,
             max_det=args.max_det,
             conf=args.conf,
+            task=args.task,
+            imgsz=args.imgsz,
         )
         for result in results:
             img_stem = Path(result.path).stem
