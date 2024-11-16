@@ -128,7 +128,7 @@ def load_files(im_dir):
     return [xx for xx in names if not xx.startswith('.')]
 
 
-def main(gt_dir, pred_dir, iou=0.7, multi_class=False, task='table_cell_det'):
+def main(gt_dir, pred_dir, iou=0.7, multi_class=False ):
     det_eval = eval_IOU(iou_thresh=iou)
 
     if not multi_class:
@@ -221,17 +221,32 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--gt_dir', default=None, type=str, required=True, help='gt txts.')
     parser.add_argument('--pred_dir', default=None, type=str, required=True, help='predict txts.')
-    parser.add_argument('--multi_class',action='store_true', help='multi_class or not')
-    parser.add_argument('--task', default='table_cell_det', type=str, help='table_cell_det or layout')
+    parser.add_argument('--multi_class', action='store_true', help='multi_class or not')
+    parser.add_argument('--dataset_name', default='table_cell_det', type=str, help='table_cell_det or layout')
     parser.add_argument('--iou', default=0.7, type=float)
     args = parser.parse_args()
 
-    if args.task == 'table_cell_det':
+    if args.dataset_name == 'table_cell_det':
         structure_class_names = ['cell']
         label2idx = {label: ids for ids, label in enumerate(structure_class_names)}
-    elif args.task == 'dataelem_layout':
+    elif args.dataset_name == 'dataelem_layout':
         structure_class_names = ['印章', '图片', '标题', '段落', '表格', '页眉', '页码', '页脚']
         label2idx = {label: ids + 1 for ids, label in enumerate(structure_class_names)}
+    elif args.dataset_name == 'doclaynet':
+        structure_class_names = [
+            'Caption',
+            'Footnote',
+            'Formula',
+            'List-item',
+            'Page-footer',
+            'Page-header',
+            'Picture',
+            'Section-header',
+            'Table',
+            'Text',
+            'Title',
+        ]
+        label2idx = {label: ids for ids, label in enumerate(structure_class_names)}
     else:
         raise ValueError(f'task {args.task} not supported')
 
