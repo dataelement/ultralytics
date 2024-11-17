@@ -34,7 +34,7 @@ if __name__ == "__main__":
 
     model_path = args.model_path
     data_base_dir = args.data_dir
-    save_dir = args.save_dir or Path(model_path).parent.parent / 'predictions_yolo11x'
+    save_dir = args.save_dir or Path(model_path).parent.parent / 'predictions'
     save_dir.mkdir(parents=True, exist_ok=True)
 
     model = YOLO(model_path)

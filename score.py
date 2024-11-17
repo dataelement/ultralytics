@@ -7,6 +7,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import Polygon as plg
+from tqdm import tqdm
 
 # from shapely.geometry import Polygon as plg
 
@@ -128,7 +129,7 @@ def load_files(im_dir):
     return [xx for xx in names if not xx.startswith('.')]
 
 
-def main(gt_dir, pred_dir, iou=0.7, multi_class=False ):
+def main(gt_dir, pred_dir, iou=0.7, multi_class=False):
     det_eval = eval_IOU(iou_thresh=iou)
 
     if not multi_class:
@@ -168,7 +169,7 @@ def main(gt_dir, pred_dir, iou=0.7, multi_class=False ):
         names = load_files(gt_dir)
         pred_boxes_dict = defaultdict(list)
         gt_boxes_dict = defaultdict(list)
-        for name in names:
+        for name in tqdm(names):
             if any(not Path(file_dir, name).exists() for file_dir in [pred_dir, gt_dir]):
                 continue
 
@@ -229,6 +230,19 @@ if __name__ == '__main__':
     if args.dataset_name == 'table_cell_det':
         structure_class_names = ['cell']
         label2idx = {label: ids for ids, label in enumerate(structure_class_names)}
+    elif args.dataset_name == 'table_row_col':
+        structure_class_names = [
+            'table column',
+            'table row',
+            'table spanning cell',
+        ]
+        label2idx = {label: ids for ids, label in enumerate(structure_class_names)}
+    elif args.dataset_name == 'table_det':
+        structure_class_names = [
+            'wired_table',
+            'lineless_table',
+        ]
+        label2idx = {label: ids + 1 for ids, label in enumerate(structure_class_names)}
     elif args.dataset_name == 'dataelem_layout':
         structure_class_names = ['印章', '图片', '标题', '段落', '表格', '页眉', '页码', '页脚']
         label2idx = {label: ids + 1 for ids, label in enumerate(structure_class_names)}
