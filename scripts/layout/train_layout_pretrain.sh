@@ -1,4 +1,4 @@
-# finetune yolo11x seg on dataelem_layout
+# train yolo11l layout pretrain model 
 python train.py \
     --data docsynth300k \
     --model_path /workspace/models/YOLO11/yolo11l.pt \
