@@ -191,9 +191,11 @@ def main(gt_dir, pred_dir, iou=0.7, multi_class=False):
             for line in open(os.path.join(gt_dir, name)):
                 line = line.strip().split(',')
                 if len(line) == 8:
-                    line = line + ["cell"]
+                    line = line + ["text"]
                 lines = line[:8]
                 label_name = line[-1]
+                if label_name not in structure_class_names:
+                    continue
                 lines = list(map(float, lines))
                 box = np.array(lines).reshape([4, 2])
                 # gt_boxes[label_name].append(np.int0(np.round(box)))
@@ -260,6 +262,9 @@ if __name__ == '__main__':
             'Text',
             'Title',
         ]
+        label2idx = {label: ids for ids, label in enumerate(structure_class_names)}
+    elif args.dataset_name == 'text_det':
+        structure_class_names = ['text']
         label2idx = {label: ids for ids, label in enumerate(structure_class_names)}
     else:
         raise ValueError(f'task {args.task} not supported')

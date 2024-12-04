@@ -49,23 +49,34 @@ if __name__ == "__main__":
     for batch in tqdm(dataloader):
         results = model.predict(
             source=batch,
-            save=True,
+            save=False,
             device=args.device,
             max_det=args.max_det,
             conf=args.conf,
             task=args.task,
             imgsz=args.imgsz,
+            verbose=False,
         )
         for result in results:
             img_stem = Path(result.path).stem
-            boxes = result.boxes.xyxy
-            classes = result.boxes.cls
-            scores = result.boxes.conf
+            if args.task == 'obb':
+                boxes = result.obb.xyxyxyxy
+                classes = result.obb.cls
+                scores = result.obb.conf
+
+            elif args.task == 'detect':
+                boxes = result.boxes.xyxy
+                classes = result.boxes.cls
+                scores = result.boxes.conf
 
             predictions = []
             for box, cls_id, conf in zip(boxes, classes, scores):
-                x1, y1, x2, y2 = box.tolist()
-                pred = map(str, [x1, y1, x2, y1, x2, y2, x1, y2, cls_id.item(), conf.item()])
+                flatten_box = box.flatten().tolist()
+                if len(flatten_box) == 4:
+                    x1, y1, x2, y2 = flatten_box
+                    pred = map(str, [x1, y1, x2, y1, x2, y2, x1, y2, cls_id.item(), conf.item()])
+                elif len(flatten_box) == 8:
+                    pred = map(str, [*flatten_box, cls_id.item(), conf.item()])
                 predictions.append(pred)
 
             with open(save_dir / f'{img_stem}.txt', 'w') as f:

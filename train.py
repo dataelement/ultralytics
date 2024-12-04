@@ -1,13 +1,15 @@
 import argparse
 from pathlib import Path
 
-from ultralytics import YOLO
+from ultralytics import RTDETR, YOLO
+from ultralytics.utils import DEFAULT_CFG_PATH
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--data', default=None, required=True, type=str)
     parser.add_argument('--model_path', default=None, required=True, type=str)
+    parser.add_argument('--cfg', default=DEFAULT_CFG_PATH, required=False, type=str)
     parser.add_argument('--epoch', default=None, required=True, type=int)
     parser.add_argument('--optimizer', default='auto', required=False, type=str)
     parser.add_argument('--momentum', default=0.937, required=False, type=float)
@@ -47,6 +49,7 @@ if __name__ == "__main__":
     name = f"{Path(args.model_path).stem}_{args.data}_epoch{args.epoch}_imgsz{args.image_size}_bs{args.batch_size}"
     results = model.train(
         data=f'{args.data}.yaml',
+        cfg=args.cfg,
         epochs=args.epoch,
         warmup_epochs=args.warmup_epochs,
         lr0=args.lr0,

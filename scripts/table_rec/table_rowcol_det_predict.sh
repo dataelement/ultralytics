@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # 设置基础路径
-MODEL_PATH=table_rowcol_det_yolo11l/yolo11l_table_rowcol_det_epoch50_imgsz1024_bs64/weights/best.pt
-SAVE_DIR=workspace/predict/yolo11l_table_rowcol_det_epoch50_imgsz1024_bs64
+MODEL_PATH=table_rowcol_det_yolo11l/yolo11l_table_rowcol_det_epoch50_imgsz1024_bs643/weights/best.pt
+SAVE_DIR=workspace/predict/yolo11l_table_rowcol_det_epoch50_imgsz1024_bs643
 
 # val路径
 DATA_DIR=/workspace/datasets/table_rec/table_row_col_det_yolo_format
@@ -15,7 +15,7 @@ DEVICE="2"
 BATCH_SIZE=8
 CONF=0.3
 MAX_DET=1000
-IMGSZ=1024
+IMGSZ=640
 
 # 运行预测
 python predict.py \
