@@ -214,7 +214,9 @@ class Instances:
         This class does not perform input validation, and it assumes the inputs are well-formed.
     """
 
-    def __init__(self, bboxes, segments=None, keypoints=None, bbox_format="xywh", normalized=True) -> None:
+    def __init__(
+        self, bboxes, segments=None, keypoints=None, bbox_format="xywh", normalized=True, cos_sin=None
+    ) -> None:
         """
         Initialize the object with bounding boxes, segments, and keypoints.
 
@@ -229,6 +231,7 @@ class Instances:
         self.keypoints = keypoints
         self.normalized = normalized
         self.segments = segments
+        self.cos_sin = cos_sin
 
     def convert_bbox(self, format):
         """Convert bounding box format."""
@@ -303,6 +306,11 @@ class Instances:
         segments = self.segments[index] if len(self.segments) else self.segments
         keypoints = self.keypoints[index] if self.keypoints is not None else None
         bboxes = self.bboxes[index]
+        try:
+            cossin = self.cos_sin[index] if self.cos_sin is not None else None
+        except Exception as e:
+            print(index)
+            print(e)
         bbox_format = self._bboxes.format
         return Instances(
             bboxes=bboxes,
@@ -310,6 +318,7 @@ class Instances:
             keypoints=keypoints,
             bbox_format=bbox_format,
             normalized=self.normalized,
+            cos_sin=cossin,
         )
 
     def flipud(self, h):
@@ -324,6 +333,8 @@ class Instances:
         self.segments[..., 1] = h - self.segments[..., 1]
         if self.keypoints is not None:
             self.keypoints[..., 1] = h - self.keypoints[..., 1]
+        if self.cos_sin is not None:
+            self.cos_sin[:, 1] = -self.cos_sin[:, 1]
 
     def fliplr(self, w):
         """Reverses the order of the bounding boxes and segments horizontally."""
@@ -337,6 +348,8 @@ class Instances:
         self.segments[..., 0] = w - self.segments[..., 0]
         if self.keypoints is not None:
             self.keypoints[..., 0] = w - self.keypoints[..., 0]
+        if self.cos_sin is not None:
+            self.cos_sin[:, 0] = -self.cos_sin[:, 0]
 
     def clip(self, w, h):
         """Clips bounding boxes, segments, and keypoints values to stay within image boundaries."""
@@ -361,6 +374,8 @@ class Instances:
                 self.segments = self.segments[good]
             if self.keypoints is not None:
                 self.keypoints = self.keypoints[good]
+            if self.cos_sin is not None:
+                self.cos_sin = self.cos_sin[good]
         return good
 
     def update(self, bboxes, segments=None, keypoints=None):
@@ -404,11 +419,13 @@ class Instances:
         use_keypoint = instances_list[0].keypoints is not None
         bbox_format = instances_list[0]._bboxes.format
         normalized = instances_list[0].normalized
+        cos_sin = instances_list[0].cos_sin is not None
 
         cat_boxes = np.concatenate([ins.bboxes for ins in instances_list], axis=axis)
         cat_segments = np.concatenate([b.segments for b in instances_list], axis=axis)
         cat_keypoints = np.concatenate([b.keypoints for b in instances_list], axis=axis) if use_keypoint else None
-        return cls(cat_boxes, cat_segments, cat_keypoints, bbox_format, normalized)
+        cat_cos_sin = np.concatenate([b.cos_sin for b in instances_list], axis=axis) if cos_sin else None
+        return cls(cat_boxes, cat_segments, cat_keypoints, bbox_format, normalized, cat_cos_sin)
 
     @property
     def bboxes(self):

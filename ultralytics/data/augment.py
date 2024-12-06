@@ -1074,7 +1074,7 @@ class RandomPerspective:
                 img = cv2.warpPerspective(img, M, dsize=self.size, borderValue=(114, 114, 114))
             else:  # affine
                 img = cv2.warpAffine(img, M[:2], dsize=self.size, borderValue=(114, 114, 114))
-        return img, M, s
+        return img, M, s, a
 
     def apply_bboxes(self, bboxes, M):
         """
@@ -1181,6 +1181,20 @@ class RandomPerspective:
         visible[out_mask] = 0
         return np.concatenate([xy, visible], axis=-1).reshape(n, nkpt, 3)
 
+    def apply_cos_sin(self, cos_sin: np.array, angle_phi: float) -> np.ndarray:
+        """
+        cos_sin: np.ndarray: [n, 2]
+        angle_phi: float
+        """
+        r_phi = np.deg2rad(angle_phi)
+        cos_phi, sin_phi = np.cos(r_phi), np.sin(r_phi)
+        cos_alpha, sin_alpha = cos_sin[..., 0].copy(), cos_sin[..., 1].copy()
+        cos_sin[..., 0] = cos_alpha * cos_phi - sin_alpha * sin_phi
+        cos_sin[..., 1] = sin_alpha * cos_phi + cos_alpha * sin_phi
+
+        assert np.allclose(np.linalg.norm(cos_sin, axis=1), 1)
+        return cos_sin
+
     def __call__(self, labels):
         """
         Applies random perspective and affine transformations to an image and its associated labels.
@@ -1231,19 +1245,26 @@ class RandomPerspective:
         self.size = img.shape[1] + border[1] * 2, img.shape[0] + border[0] * 2  # w, h
         # M is affine matrix
         # Scale for func:`box_candidates`
-        img, M, scale = self.affine_transform(img, border)
+        img, M, scale, angle = self.affine_transform(img, border)
 
         bboxes = self.apply_bboxes(instances.bboxes, M)
 
         segments = instances.segments
         keypoints = instances.keypoints
+        cos_sin = instances.cos_sin
         # Update bboxes if there are segments.
         if len(segments):
             bboxes, segments = self.apply_segments(segments, M)
+        if cos_sin is not None:
+            if cos_sin.shape[0] != bboxes.shape[0]:
+                print(f"cos_sin: {cos_sin.shape[0]}, bboxes: {bboxes.shape[0]}")
+                print(f"cos_sin: {cos_sin}, bboxes: {bboxes}")
+            assert cos_sin.shape[0] == bboxes.shape[0], f"{cos_sin.shape[0]} != {bboxes.shape[0]}"
+            cos_sin = self.apply_cos_sin(cos_sin, angle)
 
         if keypoints is not None:
             keypoints = self.apply_keypoints(keypoints, M)
-        new_instances = Instances(bboxes, segments, keypoints, bbox_format="xyxy", normalized=False)
+        new_instances = Instances(bboxes, segments, keypoints, bbox_format="xyxy", normalized=False, cos_sin=cos_sin)
         # Clip
         new_instances.clip(*self.size)
 
@@ -1958,6 +1979,7 @@ class Format:
         mask_overlap=True,
         batch_idx=True,
         bgr=0.0,
+        reg_cos_sin=False,
     ):
         """
         Initializes the Format class with given parameters for image and instance annotation formatting.
@@ -2001,6 +2023,7 @@ class Format:
         self.mask_overlap = mask_overlap
         self.batch_idx = batch_idx  # keep the batch indexes
         self.bgr = bgr
+        self.reg_cos_sin = reg_cos_sin
 
     def __call__(self, labels):
         """
@@ -2060,6 +2083,11 @@ class Format:
             labels["bboxes"] = (
                 xyxyxyxy2xywhr(torch.from_numpy(instances.segments)) if len(instances.segments) else torch.zeros((0, 5))
             )
+            if self.reg_cos_sin:
+                cos_sin = instances.cos_sin
+                assert cos_sin is not None, "cos_sin is not provided"
+                labels["cos_sin"] = torch.from_numpy(cos_sin)
+
         # NOTE: need to normalize obb in xywhr format for width-height consistency
         if self.normalize:
             labels["bboxes"][:, [0, 2]] /= w

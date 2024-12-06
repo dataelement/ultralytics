@@ -54,12 +54,13 @@ class YOLODataset(BaseDataset):
         (torch.utils.data.Dataset): A PyTorch dataset object that can be used for training an object detection model.
     """
 
-    def __init__(self, *args, data=None, task="detect", **kwargs):
+    def __init__(self, *args, data=None, task="detect", reg_cos_sin=False, **kwargs):
         """Initializes the YOLODataset with optional configurations for segments and keypoints."""
         self.use_segments = task == "segment"
         self.use_keypoints = task == "pose"
         self.use_obb = task == "obb"
         self.data = data
+        self.reg_cos_sin = reg_cos_sin
         assert not (self.use_segments and self.use_keypoints), "Can not use both segments and keypoints."
         super().__init__(*args, **kwargs)
 
@@ -97,7 +98,7 @@ class YOLODataset(BaseDataset):
                 ),
             )
             pbar = TQDM(results, desc=desc, total=total)
-            for im_file, lb, shape, segments, keypoint, nm_f, nf_f, ne_f, nc_f, msg in pbar:
+            for im_file, lb, shape, segments, keypoint, nm_f, nf_f, ne_f, nc_f, msg, cos_sin in pbar:
                 nm += nm_f
                 nf += nf_f
                 ne += ne_f
@@ -113,6 +114,7 @@ class YOLODataset(BaseDataset):
                             "keypoints": keypoint,
                             "normalized": True,
                             "bbox_format": "xywh",
+                            "bboxes_cos_sin": cos_sin,
                         }
                     )
                 if msg:
@@ -157,8 +159,13 @@ class YOLODataset(BaseDataset):
         self.im_files = [lb["im_file"] for lb in labels]  # update im_files
 
         # Check if the dataset is all boxes or all segments
-        lengths = ((len(lb["cls"]), len(lb["bboxes"]), len(lb["segments"])) for lb in labels)
-        len_cls, len_boxes, len_segments = (sum(x) for x in zip(*lengths))
+        lengths = ((len(lb["cls"]), len(lb["bboxes"]), len(lb["segments"]), len(lb['bboxes_cos_sin'])) for lb in labels)
+        len_cls, len_boxes, len_segments, len_cossin = (sum(x) for x in zip(*lengths))
+        if self.reg_cos_sin and len_boxes != len_cossin:
+                raise ValueError(
+                    "Box and cos_sin counts should be equal, but got len(cos_sin) = {len_cossin}, "
+                    "len(boxes) = {len_boxes}."
+                )
         if len_segments and len_boxes != len_segments:
             LOGGER.warning(
                 f"WARNING ⚠️ Box and segment counts should be equal, but got len(segments) = {len_segments}, "
@@ -167,6 +174,8 @@ class YOLODataset(BaseDataset):
             )
             for lb in labels:
                 lb["segments"] = []
+
+
         if len_cls == 0:
             LOGGER.warning(f"WARNING ⚠️ No labels found in {cache_path}, training may not work correctly. {HELP_URL}")
         return labels
@@ -190,6 +199,7 @@ class YOLODataset(BaseDataset):
                 mask_ratio=hyp.mask_ratio,
                 mask_overlap=hyp.overlap_mask,
                 bgr=hyp.bgr if self.augment else 0.0,  # only affect training.
+                reg_cos_sin=self.reg_cos_sin,
             )
         )
         return transforms
@@ -214,7 +224,10 @@ class YOLODataset(BaseDataset):
         keypoints = label.pop("keypoints", None)
         bbox_format = label.pop("bbox_format")
         normalized = label.pop("normalized")
-
+        bbox_cos_sin = label.pop("bboxes_cos_sin")
+        if bbox_cos_sin is not None:
+            assert len(bboxes) == len(bbox_cos_sin), "Box and cos_sin counts should be equal."
+        
         # NOTE: do NOT resample oriented boxes
         segment_resamples = 100 if self.use_obb else 1000
         if len(segments) > 0:
@@ -223,7 +236,15 @@ class YOLODataset(BaseDataset):
             segments = np.stack(resample_segments(segments, n=segment_resamples), axis=0)
         else:
             segments = np.zeros((0, segment_resamples, 2), dtype=np.float32)
-        label["instances"] = Instances(bboxes, segments, keypoints, bbox_format=bbox_format, normalized=normalized)
+
+        label["instances"] = Instances(
+            bboxes,
+            segments,
+            keypoints,
+            bbox_format=bbox_format,
+            normalized=normalized,
+            cos_sin=bbox_cos_sin,
+        )
         return label
 
     @staticmethod
@@ -236,7 +257,7 @@ class YOLODataset(BaseDataset):
             value = values[i]
             if k == "img":
                 value = torch.stack(value, 0)
-            if k in {"masks", "keypoints", "bboxes", "cls", "segments", "obb"}:
+            if k in {"masks", "keypoints", "bboxes", "cls", "segments", "obb", "cos_sin"}:
                 value = torch.cat(value, 0)
             new_batch[k] = value
         new_batch["batch_idx"] = list(new_batch["batch_idx"])

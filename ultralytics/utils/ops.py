@@ -837,3 +837,49 @@ def clean_str(s):
         (str): a string with special characters replaced by an underscore _
     """
     return re.sub(pattern="[|@#!¡·$€%&()=?¿^*;:,¨´><+]", repl="_", string=s)
+
+
+def compute_seg_cos_sin(segmentations: list[np.ndarray], normlized=False) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Computes the cosine and sine of the angles of the bounding boxes from the given segmentations.
+
+    segmentations (list[np.ndarray]): A list of numpy arrays, where each array represents the
+                                      coordinates of the vertices of a bounding box.
+
+    Returns:
+        tuple[np.ndarray, np.ndarray]: Two numpy arrays containing the cosine and sine of the angles
+                                       of the bounding boxes, respectively.
+
+    Example:
+        >>> import numpy as np
+        >>> segmentations = [np.array([[0, 0], [1, 0], [1, 1], [0, 1]]),
+                             np.array([[2, 2], [3, 2], [3, 3], [2, 3]])]
+        >>> cos, sin = compute_seg_cos_sin(segmentations)
+        >>> print(cos)
+        >>> print(sin)
+    """
+    boxes_cos = []
+    boxes_sin = []
+    for index, seg in enumerate(segmentations):
+        # compute angle, 默认起始点是从文字的左上角给出的
+        angle_vector = seg[1] - seg[0]
+        if normlized:
+            cos_angle = (angle_vector[0] / np.linalg.norm(angle_vector) + 1) / 2  # 归一化到[0,1]
+            sin_angle = (angle_vector[1] / np.linalg.norm(angle_vector) + 1) / 2  # 归一化到[0,1]
+        else:
+            cos_angle = angle_vector[0] / np.linalg.norm(angle_vector)
+            sin_angle = angle_vector[1] / np.linalg.norm(angle_vector)
+        boxes_cos.append(cos_angle)
+        boxes_sin.append(sin_angle)
+
+    boxes_cos = np.array(boxes_cos).reshape(-1, 1)
+    boxes_sin = np.array(boxes_sin).reshape(-1, 1)
+    return np.concatenate((boxes_cos, boxes_sin), 1)
+
+
+if __name__ == '__main__':
+    import numpy as np
+
+    segmentations = [np.array([[0, 0], [1, 0], [1, 1], [0, 1]]), np.array([[2, 2], [3, 2], [3, 3], [2, 3]])]
+    cos_sin = compute_seg_cos_sin(segmentations)
+    print(cos_sin)
