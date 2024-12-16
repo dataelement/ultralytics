@@ -9,6 +9,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from ultralytics import YOLO
+from ultralytics.utils.common import mask_to_bboxes
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -47,12 +48,17 @@ if __name__ == "__main__":
     dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False)
 
     for batch in tqdm(dataloader):
+        if args.task == 'seg':
+            retina_masks = True
+        else:
+            retina_masks = False
         results = model.predict(
             source=batch,
             save=False,
             device=args.device,
             max_det=args.max_det,
             conf=args.conf,
+            retina_masks=retina_masks,
             task=args.task,
             imgsz=args.imgsz,
             verbose=False,
@@ -60,23 +66,38 @@ if __name__ == "__main__":
         for result in results:
             img_stem = Path(result.path).stem
             if args.task == 'obb':
-                boxes = result.obb.xyxyxyxy
-                classes = result.obb.cls
-                scores = result.obb.conf
+                boxes = result.obb.xyxyxyxy.cpu().numpy()
+                classes = result.obb.cls.cpu().numpy()
+                scores = result.obb.conf.cpu().numpy()
 
             elif args.task == 'detect':
-                boxes = result.boxes.xyxy
-                classes = result.boxes.cls
-                scores = result.boxes.conf
+                boxes = result.boxes.xyxy.cpu().numpy()
+                classes = result.boxes.cls.cpu().numpy()
+                scores = result.boxes.conf.cpu().numpy()
+
+            elif args.task == 'seg':
+                if not result.masks:
+                    continue
+                masks = result.masks.data.cpu().numpy()
+                scores = result.boxes.conf.cpu().numpy()
+                classes = result.boxes.cls.cpu().numpy()
+                boxes, scores, classes = mask_to_bboxes(masks, scores, result.orig_shape, classes)
 
             predictions = []
             for box, cls_id, conf in zip(boxes, classes, scores):
-                flatten_box = box.flatten().tolist()
+                cls_id = torch.tensor(cls_id)
+                conf = torch.tensor(conf)
+                h, w = result.orig_shape
+                flatten_box = box.flatten()
                 if len(flatten_box) == 4:
+                    flatten_box[[0, 2]] = flatten_box[[0, 2]].clip(0, w - 1)
+                    flatten_box[[1, 3]] = flatten_box[[1, 3]].clip(0, h - 1)
                     x1, y1, x2, y2 = flatten_box
                     pred = map(str, [x1, y1, x2, y1, x2, y2, x1, y2, cls_id.item(), conf.item()])
                 elif len(flatten_box) == 8:
-                    pred = map(str, [*flatten_box, cls_id.item(), conf.item()])
+                    flatten_box[[0, 2, 4, 6]] = flatten_box[[0, 2, 4, 6]].clip(0, w - 1)
+                    flatten_box[[1, 3, 5, 7]] = flatten_box[[1, 3, 5, 7]].clip(0, h - 1)
+                    pred = map(str, [*flatten_box, int(cls_id.item()), conf.item()])
                 predictions.append(pred)
 
             with open(save_dir / f'{img_stem}.txt', 'w') as f:
