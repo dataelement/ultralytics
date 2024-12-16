@@ -1,7 +1,14 @@
 import argparse
+import os
 from pathlib import Path
 
-from ultralytics import RTDETR, YOLO
+# import debugpy
+
+# debugpy.listen(("localhost", 9501))
+# print("Waiting for debugger attach")
+# debugpy.wait_for_client()
+os.environ['NO_ALBUMENTATIONS_UPDATE'] = '1'
+from ultralytics import YOLO
 from ultralytics.utils import DEFAULT_CFG_PATH
 
 if __name__ == "__main__":
@@ -10,6 +17,7 @@ if __name__ == "__main__":
     parser.add_argument('--data', default=None, required=True, type=str)
     parser.add_argument('--model_path', default=None, required=True, type=str)
     parser.add_argument('--cfg', default=DEFAULT_CFG_PATH, required=False, type=str)
+    parser.add_argument('--reg_max', default=16, required=False, type=int)
     parser.add_argument('--epoch', default=None, required=True, type=int)
     parser.add_argument('--optimizer', default='auto', required=False, type=str)
     parser.add_argument('--momentum', default=0.937, required=False, type=float)
@@ -46,7 +54,7 @@ if __name__ == "__main__":
         plot = False
 
     # Train the model
-    name = f"{Path(args.model_path).stem}_{args.data}_epoch{args.epoch}_imgsz{args.image_size}_bs{args.batch_size}"
+    name = f"{Path(args.model_path).stem}_{args.data}_epoch{args.epoch}_imgsz{args.image_size}_bs{args.batch_size}_reg_max{args.reg_max}"
     results = model.train(
         data=f'{args.data}.yaml',
         cfg=args.cfg,
@@ -61,6 +69,7 @@ if __name__ == "__main__":
         device=args.device,
         workers=args.workers,
         plots=plot,
+        reg_max=args.reg_max,
         exist_ok=False,
         val=val,
         resume=args.resume,

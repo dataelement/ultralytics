@@ -82,6 +82,8 @@ if __name__ == "__main__":
                 scores = result.boxes.conf.cpu().numpy()
                 classes = result.boxes.cls.cpu().numpy()
                 boxes, scores, classes = mask_to_bboxes(masks, scores, result.orig_shape, classes)
+            else:
+                raise ValueError(f'task {args.task} not supported')
 
             predictions = []
             for box, cls_id, conf in zip(boxes, classes, scores):

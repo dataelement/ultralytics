@@ -16,6 +16,7 @@ BATCH_SIZE=16
 CONF=0.4
 MAX_DET=1000
 IMGSZ=1024
+TASK="detect"
 
 # 运行预测
 python predict.py \
@@ -26,4 +27,5 @@ python predict.py \
     --device ${DEVICE} \
     --conf ${CONF} \
     --max-det ${MAX_DET} \
+    --task ${TASK} \
     --imgsz ${IMGSZ}

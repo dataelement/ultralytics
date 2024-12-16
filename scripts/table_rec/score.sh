@@ -1,26 +1,26 @@
 #!/bin/bash
 
 # score table cell det
+python score.py \
+    --gt_dir /workspace/datasets/table_rec/general_table_structure_cell_pad50_with_hsbc_ablation_line_exp11/txts_val \
+    --pred_dir workspace/table_cell_det_yolo11l_reg32/yolo11l_table_cell_det_epoch50_imgsz1024_bs32 \
+    --multi_class \
+    --iou 0.9 \
+    --dataset_name table_cell_det
+
 # python score.py \
-#     --gt_dir /workspace/datasets/table_rec/general_table_structure_cell_pad50_with_hsbc_ablation_line_exp11/txts_val \
-#     --pred_dir workspace/predict/yolo11l_table_cell_det_epoch50_imgsz1024_bs16 \
+#     --gt_dir /workspace/datasets/table_rec/general_table_structure_row_col_pad50_with_hsbc/txts_val \
+#     --pred_dir workspace/table_rowcol_det_yolo11l_reg64/yolo11l_table_rowcol_det_epoch60_imgsz640_bs128 \
 #     --multi_class \
 #     --iou 0.8 \
-#     --dataset_name table_cell_det
-
-python score.py \
-    --gt_dir /workspace/datasets/table_rec/general_table_structure_row_col_pad50_with_hsbc/txts_val \
-    --pred_dir workspace/predict/yolo11l_table_rowcol_det_epoch50_imgsz1024_bs643 \
-    --multi_class \
-    --iou 0.8 \
-    --dataset_name table_row_col
+#     --dataset_name table_row_col
 
 
 # python score.py \
 #     --gt_dir /workspace/datasets/table_rec/table_det_cls/txts_val \
-#     --pred_dir workspace/predict/yolo11s_table_det_epoch50_imgsz640_bs512 \
+#     --pred_dir workspace/table_det_yolo11x_obb/yolo11l-obb_table_det_epoch50_imgsz640_bs128 \
 #     --multi_class \
-#     --iou 0.5 \
+#     --iou 0.8 \
 #     --dataset_name table_det
 
 # # Create txts_val directory if it doesn't exist
