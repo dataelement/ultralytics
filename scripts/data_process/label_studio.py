@@ -2,7 +2,7 @@ import argparse
 import json
 import urllib.parse
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
@@ -55,6 +55,11 @@ def bbox2ls(bbox, original_width, original_height):
         r += 360
     # if (r >= 360): r -= 360 # don't really need this since -pi <= arctan2(x, y) <= pi
 
+    x_ = x_.clip(0, 100)
+    y_ = y_.clip(0, 100)
+    w = w.clip(0, 100)
+    h = h.clip(0, 100)
+    r = r.clip(0, 360)
     return x_, y_, w, h, r
 
 
@@ -138,21 +143,6 @@ class Template(BaseModel):
     data: DataModel = Field(..., description="基础数据")
 
 
-def coco_to_label_studio_pre_annotation(data_dir, output_file, url_prefix):
-    content = []
-    for idx, file in enumerate(list(Path(data_dir).glob('*'))):
-        document = {}
-        page_url = "{}/{}".format(url_prefix, file.name)
-        page_url = urllib.parse.quote(page_url, safe='://')
-        document['image'] = page_url
-        document['Index'] = idx
-        document['Tag'] = "Images"
-        content.append(document)
-
-    with open(output_file, 'w') as fout:
-        json.dump(content, fout, indent=4)
-
-
 def create_annotation(
     image_url: str,
     bboxes: List[np.ndarray],
@@ -196,14 +186,13 @@ class ConvertLayoutDataToLabelStudio:
     coco_json_file: str
     output_file: str
     url_prefix: str
-    category_mapping: Dict[int, str] = {}
+    category_mapping: Dict[int, str] = field(default_factory=dict)
 
     def __post_init__(self):
         # 验证 images 文件夹是否存在
         if not Path(self.data_dir).exists():
             raise ValueError(f"images 文件夹不存在: {self.data_dir}")
-        self.coco_file = Path(self.data_dir) / 'train.json'
-        with open(self.coco_file, 'r') as fin:
+        with open(self.coco_json_file, 'r') as fin:
             self.coco_data = json.load(fin)
 
         self.image_id2annos = self._get_image_id2annos()
@@ -281,7 +270,9 @@ class ConvertLayoutDataToLabelStudio:
             content.append(template.model_dump())
         with open(self.output_file, 'w') as fout:
             json.dump(content, fout, indent=4)
-        print(self._gen_label_html())
+        label_html = self._gen_label_html()
+        with open(self.output_file.replace('.json', '.html'), 'w') as fout:
+            fout.write(label_html)
 
 
 def get_args():
