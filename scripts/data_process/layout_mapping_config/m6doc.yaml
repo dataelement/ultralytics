@@ -1,0 +1,59 @@
+QR code: figure
+advertisement: plain_text
+algorithm: plain_text
+answer: plain_text
+author: plain_text
+barcode: figure
+bill: plain_text
+breakout: plain_text
+byline: plain_text
+caption: figure_caption
+table caption: table_caption
+catalogue: plain_text
+chapter title: title
+code: plain_text
+credit: plain_text
+dateline: plain_text
+editor's note: plain_text
+endnote: plain_text
+examinee information: plain_text
+fifth-level title: title
+figure: figure
+first-level question number: plain_text
+first-level title: title
+second-level question number: plain_text
+second-level title: title
+footer: page_footer
+footnote: plain_text
+formula: formula
+fourth-level section title: title
+fourth-level title: title
+header: page_header
+jump line: plain_text
+kicker: title
+mugshot: figure
+option: plain_text
+ordered list: plain_text
+other question number: plain_text
+page number: page_number
+paragraph: plain_text
+poem: plain_text
+reference: plain_text
+section: title
+section title: title
+sidebar: plain_text
+sub section title: title
+subhead: title
+subsub section title: title
+supplementary note: plain_text
+table: table
+table note: table_caption
+third-level question number: plain_text
+third-level title: title
+title: title
+translator: plain_text
+unordered list: plain_text
+part: title
+headline: title
+byline: plain_text
+lead: plain_text
