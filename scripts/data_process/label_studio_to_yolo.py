@@ -234,8 +234,8 @@ def create_yaml(output_dir, names2id):
         f.write(f"val: images/val # val images (relative to 'path') 4 images\n")
         f.write(f"test: # test images (optional)\n")
         f.write(f"names:\n")
-        for i, name in names2id.items():
-            f.write(f"    {i}: {name}\n")
+        for name, _id in names2id.items():
+            f.write(f"    {_id}: {name}\n")
 
 
 def main():
@@ -289,6 +289,7 @@ def main():
 
     create_yaml(args.output_dir, names2id)
     print(f'YAML file created at {args.output_dir}/data.yaml')
+
 
 if __name__ == '__main__':
     main()
