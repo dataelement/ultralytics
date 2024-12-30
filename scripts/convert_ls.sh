@@ -21,7 +21,7 @@ for dataset in "${datasets[@]}"; do
     dataset_lower=$(echo "$dataset" | tr '[:upper:]' '[:lower:]')
     
     # 处理训练集
-    python label_studio_converter.py \
+    python scripts/data_process/label_studio_converter.py \
         --data_dir "/workspace/datasets/layout/unsv2_layout/${dataset}" \
         --coco_json_file "/workspace/datasets/layout/unsv2_layout/${dataset}/train.json" \
         --output_file "${output_dir}/${dataset_lower}_train.json" \
@@ -29,7 +29,7 @@ for dataset in "${datasets[@]}"; do
         --category_mapping_file "/workspace/youjiachen/workspace/ultralytics/scripts/data_process/layout_mapping_config/${dataset_lower}.yaml"
     
     # 处理验证集
-    python label_studio_converter.py \
+    python scripts/data_process/label_studio_converter.py \
         --data_dir "/workspace/datasets/layout/unsv2_layout/${dataset}" \
         --coco_json_file "/workspace/datasets/layout/unsv2_layout/${dataset}/val.json" \
         --output_file "${output_dir}/${dataset_lower}_val.json" \
