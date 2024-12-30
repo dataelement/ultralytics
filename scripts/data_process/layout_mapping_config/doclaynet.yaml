@@ -1,0 +1,14 @@
+Title: title
+Text: plain_text
+Section-header: title
+Table: table
+Table-caption: table_caption
+Picture: figure
+Picture-caption: figure_caption
+Caption: caption
+Page-header: page_header
+Page-footer: page_footer
+Page-number: page_number
+List-item: plain_text
+Formula: formula
+

@@ -139,7 +139,7 @@ class LayoutDataset(BaseModel):
         }
         with open(output_dir / 'meta.json', 'w') as f:
             json.dump(meta_data, f, ensure_ascii=False, indent=4)
-    
+
     def convert_to_label_studio_format(self):
         pass
 
@@ -150,7 +150,7 @@ class LayoutDatasets:
         self.datasets = [
             self.get_doclaynet_dataset(),
             self.get_m6doc_dataset(),
-            self.get_cdla_dataset(),
+            # self.get_cdla_dataset(),
             self.get_elemlayout_dataset(),
             self.get_d4la_dataset(),
         ]
@@ -262,9 +262,15 @@ class LayoutDatasets:
                 image['doc_category'] = scene
 
                 pre_image_id = image['id']
-                image['id'] = train_id
+                pre_image_name = image['file_name']
+
+                new_file_name = f'train_{scene}_{train_id}.jpg'
+                image['file_name'] = new_file_name
+                image_path = getattr(DataPath, f'ElemLayout_{scene}_images').value.parent / pre_image_name
+                # image_path.rename(image_path.parent / new_file_name)
 
                 train_id_map[pre_image_id] = train_id
+                image['id'] = train_id
                 train_id += 1
             for ann in data['annotations']:
                 ann['image_id'] = train_id_map[ann['image_id']]
@@ -281,6 +287,13 @@ class LayoutDatasets:
                 image['doc_category'] = scene
 
                 pre_image_id = image['id']
+                pre_image_name = image['file_name']
+
+                new_file_name = f'val_{scene}_{val_id}.jpg'
+                image['file_name'] = new_file_name
+                image_path = getattr(DataPath, f'ElemLayout_{scene}_images').value.parent / pre_image_name
+                # image_path.rename(image_path.parent / new_file_name)
+
                 image['id'] = val_id
                 val_id_map[pre_image_id] = val_id
                 val_id += 1
@@ -456,6 +469,11 @@ class DataSampler:
 
 if __name__ == '__main__':
     output_dir = Path('/workspace/datasets/layout/unsv2_layout')
+    if not output_dir.exists():
+        output_dir.mkdir(parents=True, exist_ok=True)
+    else:
+        shutil.rmtree(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
     layout_datasets = LayoutDatasets()
     scene_configs = {
         'financial_reports': {'train': 500, 'val': 100},
@@ -470,19 +488,19 @@ if __name__ == '__main__':
         'hetong': {'train': 1000, 'val': 200},
         'lunwen': {'train': 1000, 'val': 200},
         'yanbao': {'train': 1000, 'val': 200},
-        'letter': {'train': 300, 'val': 100},
-        'email': {'train': 300, 'val': 60},
-        'scientific': {'train': 300, 'val': 60},
-        'budget': {'train': 300, 'val': 60},
-        'form': {'train': 300, 'val': 60},
-        'invoice': {'train': 300, 'val': 60},
-        'specification': {'train': 300, 'val': 60},
-        'memo': {'train': 300, 'val': 60},
-        'news': {'train': 300, 'val': 60},
-        'presentation': {'train': 300, 'val': 60},
-        'resume': {'train': 300, 'val': 60},
+        'letter': {'train': 100, 'val': 20},
+        'email': {'train': 100, 'val': 20},
+        'scientific': {'train': 100, 'val': 20},
+        'budget': {'train': 100, 'val': 20},
+        'form': {'train': 100, 'val': 20},
+        'invoice': {'train': 100, 'val': 20},
+        'specification': {'train': 100, 'val': 20},
+        'memo': {'train': 100, 'val': 20},
+        'news': {'train': 100, 'val': 20},
+        'presentation': {'train': 100, 'val': 20},
+        'resume': {'train': 100, 'val': 20},
     }
-    target_labels = {'table', 'Table'}
+    target_labels = {'table', 'Table', "表格"}
     for layout_ds in tqdm(layout_datasets.datasets):
         sampler = DataSampler(layout_ds, random_seed=42)
         sample_dataset = sampler.sample_by_scene(scene_configs, target_labels)
