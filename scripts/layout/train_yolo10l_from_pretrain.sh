@@ -25,12 +25,13 @@
 
 # tarin on unsv2
 python train.py \
-    --data /workspace/datasets/layout/unsv2_layout_yolo_data/data.yaml \
+    --data unsv2_layout \
     --model_path /workspace/models/yolo_layout_pretrain_model/yolo11l_layout_pretrain.pt \
-    --epoch 40 \
+    --epoch 100 \
     --image-size 1024\
     --batch-size 64 \
-    --project layout_yolo10l_dataelem_layout_from_pretrain \
+    --project workspace/layout/layout_yolo10l_unsv2_from_pretrain \
     --plot 1 \
-    --close_mosaic 10 \
+    --close_mosaic 20 \
+    --reg_max 64 \
     --device "0,1,2,3,4,5,6,7"

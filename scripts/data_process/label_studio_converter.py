@@ -259,6 +259,8 @@ class ConvertLayoutDataToLabelStudio:
             for category in self.coco_data['categories']:
                 if category['name'] in self.category_mapping:
                     id2category[category['id']] = self.category_mapping[category['name']]
+                else:
+                    print(f"{category['name']} not in category mapping")
         else:
             for category in self.coco_data['categories']:
                 id2category[category['id']] = category['name']

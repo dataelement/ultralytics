@@ -15,6 +15,7 @@ from urllib.parse import urlparse
 import numpy as np
 import requests
 from PIL import Image
+from shapely.geometry import Polygon
 from tqdm import tqdm
 
 
@@ -239,8 +240,8 @@ def create_yaml(output_dir, names2id):
 
 
 def main():
-    default_train_json_path = '/workspace/datasets/layout/unsv2_layout_yolo_data/data/layout_train.json'
-    default_val_json_path = '/workspace/datasets/layout/unsv2_layout_yolo_data/data/layout_val.json'
+    default_train_json_path = '/workspace/datasets/layout/unsv2_layout_yolo_data/data/layout_train_v1.1.json'
+    default_val_json_path = '/workspace/datasets/layout/unsv2_layout_yolo_data/data/layout_val_v1.1.json'
     default_image_dir = '/workspace/datasets/layout/unsv2_layout'
     default_output_dir = '/workspace/datasets/layout/unsv2_layout_yolo_data'
     # json路径
@@ -255,14 +256,14 @@ def main():
 
     # 定义标签映射字典
     label_mapping = {
-        'table_caption': 'caption',
-        'figure': 'caption',
+        'table_caption': 'plain_text',
+        'figure_caption': 'plain_text',
         'page_number': 'abandon',
         'page_footer': 'abandon',
         'page_header': 'abandon',
     }
 
-    names2id = {'title': 0, 'caption': 1, 'table': 2, 'figure': 3, 'abandon': 4, 'plain_text': 5}
+    names2id = {'title': 0, 'table': 1, 'figure': 2, 'abandon': 3, 'plain_text': 4}  # del formula
 
     for split in ['train', 'val']:
         json_path = args.train_json_path if split == 'train' else args.val_json_path

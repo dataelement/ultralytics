@@ -57,3 +57,9 @@ part: title
 headline: title
 byline: plain_text
 lead: plain_text
+marginal note: plain_text
+bracket: plain_text
+correction: plain_text
+matching: table
+institute: plain_text
+index: plain_text

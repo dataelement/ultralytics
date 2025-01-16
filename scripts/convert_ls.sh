@@ -1,9 +1,9 @@
 # python m6doc_classify.py
 # 定义数据集名称数组
 # datasets=("D4LA" "ElemLayout" "M6Doc" "DocLayNet" )
-datasets=("D4LA")
+# datasets=("D4LA")
 # datasets=("DocLayNet")
-# datasets=("M6Doc")
+datasets=("M6Doc")
 output_dir="/workspace/datasets/layout/unsv2_layout_ls_v2"
 # 如果 output_dir 不存在，则创建, 如果存在则删除
 if [ ! -d "$output_dir" ]; then 

@@ -1,0 +1,10 @@
+path: /workspace/datasets/layout/unsv2_layout_yolo_data
+train: images/train # train images (relative to 'path') 4 images
+val: images/val # val images (relative to 'path') 4 images
+test: # test images (optional)
+names:
+    0: title
+    1: table
+    2: figure
+    3: abandon
+    4: plain_text
